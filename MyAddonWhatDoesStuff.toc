@@ -1,0 +1,9 @@
+## Interface: 30300
+## Title: My Addon What Does Stuff
+## Author: Kemayo
+## Notes: Personal tweaks
+## Version: @project-version@
+## LoadOnDemand: 0
+## OptionalDeps: Ace3, tekDebug
+
+addon.lua
