@@ -1,4 +1,4 @@
-## Interface: 30300
+## Interface: 40000
 ## Title: My Addon What Does Stuff
 ## Author: Kemayo
 ## Notes: Personal tweaks
