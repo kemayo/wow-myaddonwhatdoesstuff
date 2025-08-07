@@ -1,9 +1,9 @@
-## Interface: 40000
+## Interface: 110002
 ## Title: My Addon What Does Stuff
 ## Author: Kemayo
 ## Notes: Personal tweaks
 ## Version: @project-version@
 ## LoadOnDemand: 0
-## OptionalDeps: Ace3, tekDebug
+## OptionalDeps: Ace3, tekDebug, LibItemLevel-1.0
 
 addon.lua
