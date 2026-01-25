@@ -77,3 +77,114 @@ end, "bags bank", 2)
 --     model:SetScript("OnUpdate", nil)
 --   end
 -- end)
+
+
+-- some debug stuff that should really be in idTip
+EventRegistry:RegisterCallback("AreaPOIPin.MouseOver", function(_, pin, tooltipShown, areaPoiID, name)
+    local tooltip = GetAppropriateTooltip()
+    if not tooltipShown then
+        tooltip:SetOwner(pin, "ANCHOR_CURSOR")
+        -- tooltip:AddLine(name)
+        tooltip:AddDoubleLine(name, "DEBUG", 1, 1, 1, 1, 0, 0)
+    end
+    tooltip:AddDoubleLine("areaPoiID", areaPoiID)
+    tooltip:Show()
+end, myname)
+
+if ReputationFrame and ReputationFrame.ScrollBox then
+    local hooked = {}
+    local function addToTooltip(self)
+        local tooltip = C_Reputation.IsFactionParagon(self.elementData.factionID) and EmbeddedItemTooltip or GameTooltip
+        tooltip:AddDoubleLine("factionID", self.elementData.factionID or UNKNOWN)
+        tooltip:Show()
+    end
+    ReputationFrame.ScrollBox:RegisterCallback(ScrollBoxListMixin.Event.OnInitializedFrame, function(_, frame, elementData)
+        if frame.ShowTooltipForReputationType and not hooked[frame] then
+            hooksecurefunc(frame, "ShowTooltipForReputationType", addToTooltip)
+            hooked[frame] = true
+        end
+    end, myname)
+end
+
+-- Trait trees
+
+do
+    local lastTree, lastConfig
+    EventRegistry:RegisterCallback("GenericTraitFrame.SetTreeID", function(_, treeid, configid)
+        lastTree = treeid
+        lastConfig = configid
+    end)
+    EventRegistry:RegisterCallback("TalentDisplay.TooltipCreated", function(_, button, tooltip)
+        if lastTree then
+            tooltip:AddDoubleLine("treeID", lastTree)
+        end
+        if lastConfig then
+            tooltip:AddDoubleLine("configID", lastConfig)
+        end
+        if button.GetNodeID and button:GetNodeID() then
+            tooltip:AddDoubleLine("nodeID", button:GetNodeID())
+        end
+        if button.GetEntryID and button:GetEntryID() then
+            tooltip:AddDoubleLine("entryID", button:GetEntryID())
+        end
+        -- idtip does give me this
+        -- if button:GetSpellID() then
+        --     tooltip:AddDoubleLine("spellID", button:GetSpellID())
+        -- end
+        tooltip:Show()
+    end)
+end
+
+-- bonus IDs
+do
+    -- this mapping came from Blizzard_Reports.lua
+    local fields = {
+       "itemID", "enchantID", "gemID1", "gemID2", "gemID3",
+       "gemID4", "suffixID", "uniqueID", "linkLevel", "specializationID",
+       "upgradeTypeID", "instanceDifficultyID", "numBonusIDs", -- [:bonusID1:bonusID2:...]
+       --[:upgradeValue1:upgradeValue2:...]:relic1NumBonusIDs[:relic1BonusID1:relic1BonusID2:...]:relic2NumBonusIDs[:relic2BonusID1:relic2BonusID2:...]:relic3NumBonusIDs[:relic3BonusID1:relic3BonusID2:...]
+    }
+    local function LinkOptions(link)
+        local linkType, linkOptions, displayText = LinkUtil.ExtractLink(link)
+        local splitOptions = {LinkUtil.SplitLinkOptions(linkOptions)}
+        local options = {}
+        for i, field in ipairs(fields) do
+            options[field] = tonumber(splitOptions[i])
+        end
+        local numBonusIDs = tonumber(options.numBonusIDs)
+        if numBonusIDs and numBonusIDs > 0 then
+            local b = {}
+            for i=1, numBonusIDs, 1 do
+                local bonusID = tonumber(splitOptions[#fields + i])
+                table.insert(b, bonusID)
+                options["bonusID"..i] = bonusID
+            end
+            options.bonusIDs = b
+        end
+        --TODO: support the rest of the fields if they ever become relevant
+        return options, linkType, displayText
+    end
+    if TooltipDataProcessor then
+        TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, function(tooltip, data)
+            local primaryInfo = tooltip:GetPrimaryTooltipInfo()
+            if issecretvalue(primaryInfo and primaryInfo.tooltipData and primaryInfo.tooltipData.type and primaryInfo.tooltipData.type) then
+                return
+            end
+            local itemLink, _
+            if tooltip.GetItem then
+                _, itemLink = tooltip:GetItem()
+            elseif tooltip.GetPrimaryTooltipData then
+                local data = tooltip:GetPrimaryTooltipData()
+                if data and data.guid and data.type == Enum.TooltipDataType.Item then
+                    itemLink = C_Item.GetItemLinkByGUID(data.guid)
+                end
+            end
+            if not itemLink then return end
+            local options = LinkOptions(itemLink)
+            if options.bonusIDs then
+                tooltip:AddDoubleLine("BonusIDs", table.concat(options.bonusIDs, ", "))
+                tooltip:Show()
+            end
+        end)
+    end
+end
