@@ -188,3 +188,28 @@ do
         end)
     end
 end
+
+
+-- Set IDs in the appearances list
+EventUtil.ContinueOnAddOnLoaded("Blizzard_Collections", function()
+    if WardrobeCollectionFrame.SetsCollectionFrame.ScrollFrame then return end -- pre-DF
+    hooksecurefunc(WardrobeSetsScrollFrameButtonIconFrameMixin, "DisplaySetTooltip", function(self)
+        local setID = self:GetParent().setID
+        if setID then
+            GameTooltip:AddDoubleLine("main setID", setID)
+            local variants = C_TransmogSets.GetVariantSets(setID)
+            if variants and #variants > 0 then
+                table.insert(variants, C_TransmogSets.GetSetInfo(setID))
+                table.sort(variants, function (a, b) return a.uiOrder < b.uiOrder end)
+                for _, variant in ipairs(variants) do
+                    GameTooltip:AddDoubleLine(
+                        variant.description, variant.setID,
+                        variant.collected and 0 or 1, variant.collected and 1 or 0, 0,
+                        variant.collected and 0 or 1, variant.collected and 1 or 0, 0
+                    )
+                end
+            end
+            GameTooltip:Show()
+        end
+    end)
+end)
