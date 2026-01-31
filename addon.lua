@@ -139,7 +139,26 @@ EventRegistry:RegisterCallback("AreaPOIPin.MouseOver", function(_, pin, tooltipS
     tooltip:Show()
 end, myname)
 
-if ReputationFrame and ReputationFrame.ScrollBox then
+-- faction IDs
+if ReputationUtil and ReputationUtil.TryAppendAccountReputationLineToTooltip then
+    -- Midnight
+    hooksecurefunc(ReputationUtil, "TryAppendAccountReputationLineToTooltip", function(tooltip, factionID)
+        tooltip:AddDoubleLine("factionID", factionID or UNKNOWN)
+        tooltip:Show()
+    end)
+    local label
+    EventRegistry:RegisterCallback("JourneysFrameMixin.FactionChanged", function(_, factionID)
+        if not label then
+            label = EncounterJournalInstanceSelect:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            label:SetPoint("TOPLEFT", 8, -8)
+            EventRegistry:RegisterCallback("EncounterJournal.TabSet", function()
+                label:Hide()
+            end)
+        end
+        label:SetFormattedText("factionID: %d", factionID or 0)
+        label:Show()
+    end)
+elseif ReputationFrame and ReputationFrame.ScrollBox then
     local hooked = {}
     local function addToTooltip(self)
         local tooltip = C_Reputation.IsFactionParagon(self.elementData.factionID) and EmbeddedItemTooltip or GameTooltip
