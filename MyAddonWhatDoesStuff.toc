@@ -7,3 +7,4 @@
 ## OptionalDeps: Ace3, tekDebug, LibItemLevel-1.0, BankStack, LibTextDump-1.0
 
 addon.lua
+tokens.lua
