@@ -128,16 +128,36 @@ end, "bags bank", 2)
 
 
 -- some debug stuff that should really be in idTip
-EventRegistry:RegisterCallback("AreaPOIPin.MouseOver", function(_, pin, tooltipShown, areaPoiID, name)
-    local tooltip = GetAppropriateTooltip()
-    if not tooltipShown then
-        tooltip:SetOwner(pin, "ANCHOR_CURSOR")
-        -- tooltip:AddLine(name)
-        tooltip:AddDoubleLine(name, "DEBUG", 1, 1, 1, 1, 0, 0)
-    end
-    tooltip:AddDoubleLine("areaPoiID", areaPoiID)
-    tooltip:Show()
-end, myname)
+do
+    local label
+    EventRegistry:RegisterCallback("AreaPOIPin.MouseOver", function(_, pin, tooltipShown, areaPoiID, name)
+        if tooltipShown then
+            local tooltip = GetAppropriateTooltip()
+            tooltip:AddDoubleLine("areaPoiID", areaPoiID)
+            tooltip:Show()
+        else
+            if not label then
+                for provider in pairs(WorldMapFrame.dataProviders) do
+                    if provider.Label and provider.Label.GetHighestPriorityLabelInfo then
+                        label = provider.Label:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+                        -- label:SetTextColor(1, 0, 0)
+                        label:SetPoint("TOP")
+                        break
+                    end
+                end
+                if label then
+                    WorldMapFrame:RegisterCallback("ClearAreaLabel", function()
+                        label:Hide()
+                    end, label)
+                end
+            end
+            if label then
+                label:SetText(("areaPoiID: %d"):format(areaPoiID))
+                label:Show()
+            end
+        end
+    end, myname)
+end
 
 -- faction IDs
 if ReputationUtil and ReputationUtil.TryAppendAccountReputationLineToTooltip then
