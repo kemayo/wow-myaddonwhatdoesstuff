@@ -10,3 +10,4 @@ addon.lua
 tokens.lua
 achievements.lua
 merchants.lua
+colors.lua
