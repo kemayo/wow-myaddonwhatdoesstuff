@@ -1,4 +1,4 @@
-## Interface: 110002, 120000, 120001
+## Interface: 120100
 ## Title: My Addon What Does Stuff
 ## Author: Kemayo
 ## Notes: Personal tweaks
