@@ -131,11 +131,7 @@ end, "bags bank", 2)
 do
     local label
     EventRegistry:RegisterCallback("AreaPOIPin.MouseOver", function(_, pin, tooltipShown, areaPoiID, name)
-        if tooltipShown then
-            local tooltip = GetAppropriateTooltip()
-            tooltip:AddDoubleLine("areaPoiID", areaPoiID)
-            tooltip:Show()
-        else
+        if not tooltipShown then
             if not label then
                 for provider in pairs(WorldMapFrame.dataProviders) do
                     if provider.Label and provider.Label.GetHighestPriorityLabelInfo then
@@ -157,6 +153,22 @@ do
             end
         end
     end, myname)
+
+    hooksecurefunc(AreaPoiUtil, "TryShowTooltip", function(region, anchor, poiInfo, customFn)
+        local hasDescription = poiInfo.description and poiInfo.description ~= "";
+        local isTimed, hideTimer = C_AreaPoiInfo.IsAreaPOITimed(poiInfo.areaPoiID);
+        local showTimer = not poiInfo.forceHideTimer and (poiInfo.secondsLeft or (isTimed and not hideTimer));
+        local hasWidgetSet = poiInfo.tooltipWidgetSet ~= nil;
+        local hasTooltip = hasDescription or showTimer or hasWidgetSet
+
+        if hasTooltip then
+            local tooltip = GetAppropriateTooltip()
+            tooltip:AddDoubleLine("areaPoiID", poiInfo.areaPoiID)
+            tooltip:Show()
+        else
+            -- The callback branch above
+        end
+    end)
 end
 
 -- faction IDs
